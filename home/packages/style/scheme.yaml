@@ -1,0 +1,37 @@
+#scheme: "Slate Dark"
+#author: "meisme"
+#base00: "181c1e"
+#base01: "242a2d"
+#base02: "2f5861"
+#base03: "2f5861"
+#base04: "242a2d"
+#base05: "51e0ff"
+#base06: "51e0ff"
+#base07: "00ffff"
+#base08: "00ffff"
+#base09: "85ffc4"
+#base0A: "85c7d6"
+#base0B: "6cf4a3"
+#base0C: "8ae6fb"
+#base0D: "86d798"
+#base0E: "96d9ff"
+#base0F: "ffee96"
+
+scheme: "Everforest Dark Hard"
+author: "Oskar Liew (https://github.com/OskarLiew)"
+base00: "272e33" # bg0,        Default background
+base01: "2e383c" # bg1,        Lighter background
+base02: "414b50" # bg3,        Selection background
+base03: "859289" # grey1,      Comments
+base04: "9da9a0" # grey2,      Dark foreground
+base05: "d3c6aa" # fg,         Default foreground
+base06: "e4e1cd" # bg3,        Light foreground
+base07: "fdf6e3" # bg0,        Light background
+base08: "7fbbb3" # blue
+base09: "d699b6" # purple
+base0A: "dbbc7f" # yellow
+base0B: "83c092" # aqua
+base0C: "e69875" # orange
+base0D: "a7c080" # green
+base0E: "e67e80" # red
+base0F: "4C3743" # bg_visual
