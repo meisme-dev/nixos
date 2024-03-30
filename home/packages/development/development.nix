@@ -1,4 +1,4 @@
-{ libs, config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   imports =
@@ -7,7 +7,6 @@
       ./haskell.nix
       ./neovim/neovim.nix
       ./nixlang.nix
- #     ./vscode.nix
       ./rust.nix
     ];
 

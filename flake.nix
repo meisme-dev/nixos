@@ -11,12 +11,9 @@
     nixvim.url = "github:nix-community/nixvim";
   };
 
-  outputs = { self, nixpkgs, home-manager, stylix, nixvim, ... }:
+  outputs = { nixpkgs, home-manager, stylix, nixvim, ... }:
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-      };
       lib = nixpkgs.lib;
     in {
       nixosConfigurations = {

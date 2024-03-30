@@ -1,11 +1,9 @@
-{ libs, config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
-
   imports =
     [
       ./zsh.nix
-    #  ./kitty.nix
     ];
 
   home.packages = with pkgs; [

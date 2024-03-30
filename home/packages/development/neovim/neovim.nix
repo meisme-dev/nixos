@@ -1,4 +1,4 @@
-{ libs, config, pkgs, nixvim, ... }:
+{ pkgs, ... }:
 
 let
   mapleader = " ";
