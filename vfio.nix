@@ -28,10 +28,7 @@ in
         initrd.kernelModules = [
           "vfio_pci"
           "vfio"
-          "nvidia"
-          "nvidia_modeset"
-          "nvidia_uvm"
-          "nvidia_drm"
+          "nouveau"
           "kvmfr"
         ];
 
@@ -74,10 +71,7 @@ in
 
           case $2 in
           prepare)
-              modprobe -r nvidia_drm
-              modprobe -r nvidia_uvm
-              modprobe -r nvidia_modeset
-              modprobe -r nvidia
+              modprobe -r nouveau 
 
               modprobe kvmfr static_size_mb=32
 
@@ -103,12 +97,7 @@ in
 
               echo 1 > /sys/bus/pci/rescan
 
-              modprobe nvidia
-              modprobe nvidia_modeset
-              modprobe nvidia_uvm
-              modprobe nvidia_drm
-
-              nvidia-xconfig --query-gpu-info > /dev/null 2>&1
+              modprobe nouveau 
 
               systemctl set-property --runtime -- user.slice AllowedCPUs=0-15
               systemctl set-property --runtime -- system.slice AllowedCPUs=0-15

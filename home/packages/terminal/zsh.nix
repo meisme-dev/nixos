@@ -5,7 +5,7 @@
   programs.zsh = {
     enable = true;
     enableCompletion = true;
-    enableAutosuggestions = true;
+    autosuggestion.enable = true;
     dotDir = ".config/zsh";
 
     # Set some aliases for convenience
@@ -47,4 +47,7 @@
   programs.starship = {
     enable = true;
   };
+
+  # Enable direnv
+  programs.direnv.enable = true;
 }

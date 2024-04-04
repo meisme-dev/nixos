@@ -1,8 +1,6 @@
 { pkgs, ... }:
 
-let
-  mapleader = " ";
-in {
+{
   home.packages = with pkgs; [
     neovide
   ];
@@ -13,7 +11,7 @@ in {
     viAlias = true;
     vimAlias = true;
 
-    globals.mapleader = mapleader;
+    globals.mapleader = " ";
    
     plugins = {
       alpha = {
@@ -51,7 +49,7 @@ in {
                 type = "button";
                 val = " New file";
                 opts = {
-                  keymap = [ "n" "e" "<cmd>ene <CR>" {noremap = true; silent = true; nowait = true;} ];
+                  keymap = [ "n" "e" "<cmd>ene<cr>" {noremap = true; silent = true; nowait = true;} ];
                   shortcut = "e";
                   position = "center";
                   width = 50;
@@ -64,7 +62,7 @@ in {
                 type = "button";
                 val = "󰈞 Find file";
                 opts = {
-                  keymap = [ "n" "f" "<cmd>Telescope find_files <CR>" {noremap = true; silent = true; nowait = true;} ];
+                  keymap = [ "n" "f" "<cmd>Telescope find_files<cr>" {noremap = true; silent = true; nowait = true;} ];
                   shortcut = "f";
                   position = "center";
                   width = 50;
@@ -77,7 +75,7 @@ in {
                 type = "button";
                 val = " Recent files";
                 opts = {
-                  keymap = [ "n" "r" "<cmd>Telescope oldfiles <CR>" {noremap = true; silent = true; nowait = true;} ];
+                  keymap = [ "n" "r" "<cmd>Telescope oldfiles<cr>" {noremap = true; silent = true; nowait = true;} ];
                   shortcut = "r";
                   position = "center";
                   width = 50;
@@ -90,14 +88,14 @@ in {
                 type = "button";
                 val = " Restore Session";
                 opts = {
-                  keymap = [ "n" "s" "<cmd>lua require('persistence').load() <CR>" {noremap = true; silent = true; nowait = true;} ];
+                  keymap = [ "n" "s" "<cmd>Telescope session-lens<cr>" {noremap = true; silent = true; nowait = true;} ];
                   shortcut = "s";
                   position = "center";
                   width = 50;
                   align_shortcut = "right";
                   cursor = 2;
                 };
-                on_press.__raw = "function() vim.cmd[[lua require('persistence').load()]] end";
+                on_press.__raw = "function() vim.cmd[[Telescope session-lens]] end";
               }
               {
                 type = "button";
@@ -119,7 +117,13 @@ in {
         }
       ];
     };
-    
+
+    auto-session = {
+      enable = true;
+      autoRestore.enabled = false;
+      autoSave.enabled = true;
+    };
+
     bufferline = {
       enable = true;
       offsets = [{
@@ -131,10 +135,44 @@ in {
     };
 
     clangd-extensions.enable = true;
+
+    cmp = {
+      enable = true;
+      settings = {
+        mapping = {
+          "<cr>" = "cmp.mapping.confirm({ select=true })";
+          "<tab>" = "cmp.mapping(cmp.mapping.select_next_item(), { 'i', 's' })";
+        };
+
+        snippet.expand = ''
+          function(args)
+            require('luasnip').lsp_expand(args.body)
+          end
+        '';
+
+        preselect = "cmp.PreselectMode.None";
+        sources = [
+          {
+            name = "nvim_lsp";
+          }
+          {
+            name = "luasnip";
+          }
+          {
+            name = "path";
+          }
+          {
+            name = "buffer";
+          }
+        ];
+      };
+    };
+
+    comment.enable = true;
     cursorline.enable = true;
     floaterm.enable = true;
-    lsp-format.enable = true;
-    
+    gitsigns.enable = true;
+
     lsp = {
       enable = true;
       servers = {
@@ -143,24 +181,37 @@ in {
       };
     };
    
+    lsp-format.enable = true;
+
     lualine = {
       enable = true;
       sectionSeparators.left = "";
       sectionSeparators.right = "";
     };
 
+    luasnip.enable = true;
+    
+    mini = {
+      enable = true;
+      modules.indentscope = {
+        symbol = "│";
+      };
+    };
+
     nix.enable = true;
+    noice.enable = true;
+    notify.enable = true;
+    
+    nvim-colorizer.enable = true;
     
     nvim-tree = {
       enable = true;
-      view.width = 36;
       filters.dotfiles = true;
+      hijackCursor = true;
+      syncRootWithCwd = true;
+      view.width = 36;
     };
 
-    noice.enable = true;
-    notify.enable = true;
-    nvim-colorizer.enable = true;
-    persistence.enable = true;
     telescope.enable = true;
     todo-comments.enable = true;
     treesitter-context.enable = true;
@@ -232,11 +283,10 @@ in {
       shiftwidth = 2;
     };
 
-    extraPlugins = with pkgs.vimPlugins; [
-      coc-nvim
-      (pkgs.vimUtils.buildVimPlugin {
+    extraPlugins = with pkgs; [
+      (vimUtils.buildVimPlugin {
         name = "everforest";
-        src = pkgs.fetchFromGitHub {
+        src = fetchFromGitHub {
           owner = "neanias";
           repo = "everforest-nvim";
           rev = "eedb19079c6bf9d162f74a5c48a6d2759f38cc76";

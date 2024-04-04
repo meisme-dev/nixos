@@ -10,16 +10,17 @@
     ];
 
   home.packages = with pkgs; [
-    pamixer
-    font-awesome
-    material-symbols
-    material-design-icons
     adw-gtk3
+    font-awesome
     gnome.adwaita-icon-theme
-    unzip
+    hikari
     imagemagick
-    pomodoro
+    material-design-icons
+    material-symbols
     monkeysphere
+    pamixer
+    pomodoro
+    unzip
     wl-clipboard
  ];
 }

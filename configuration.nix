@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running `nixos-help`).
 
-{ lib, config, pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
   imports =
@@ -20,14 +20,14 @@
   };
 
 
+  # Enable NTFS
+  boot.supportedFilesystems = [ "ntfs" ];
+
+
   # Add binary caches to speed up builds
   nix.settings.trusted-substituters = [ "https://nix-community.cachix.org" ];
   nix.settings.trusted-public-keys = [ "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=" ];
   nix.settings.substituters = [ "https://nix-community.cachix.org" ];
-
-
-  # Allow proprietary packages
-  nixpkgs.config.allowUnfree = true;
 
 
   # Disable logging
@@ -88,14 +88,14 @@
 
   # Enable GPU drivers
   services.xserver.videoDrivers = [
-    "nvidia"
+    "nouveau"
     "amdgpu"
   ];
 
 
   # Enable early KMS
   boot.initrd.kernelModules = [
-    "nvidia"
+    "nouveau"
     "amdgpu"
   ];
 
@@ -120,19 +120,19 @@
   };
 
 
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = true;
-    powerManagement.finegrained = false;
-    open = false; # Disable until updated to build on >= 6.7
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-    prime = {
-      sync.enable = true;
-      nvidiaBusId = "PCI:01:00:0";
-      amdgpuBusId = "PCI:06:00:0";
-    };
-  };
+  # hardware.nvidia = {
+  #   modesetting.enable = true;
+  #   powerManagement.enable = true;
+  #   powerManagement.finegrained = false;
+  #   open = false; # Disable until updated to build on >= 6.7
+  #   nvidiaSettings = true;
+  #   package = config.boot.kernelPackages.nvidiaPackages.stable;
+  #   prime = {
+  #     sync.enable = true;
+  #     nvidiaBusId = "PCI:01:00:0";
+  #     amdgpuBusId = "PCI:06:00:0";
+  #   };
+  # };
 
  
   # Enable Gnome
@@ -220,6 +220,14 @@
   programs.kdeconnect.package = pkgs.gnomeExtensions.gsconnect;
 
 
+  # Enable launching dynamically linked executables
+  programs.nix-ld.enable = true;
+
+
+  # Enable Gamescope
+  # programs.gamescope.enable = true;
+
+
   # Add system packages
   environment.systemPackages = with pkgs; [
     vim
@@ -281,11 +289,6 @@
 
   # Enable XBOX controller driver
   hardware.xpadneo.enable = true;
-
-
-  # Enable Steam
-  programs.steam.enable = true;
-  programs.steam.remotePlay.openFirewall = true;
 
 
   # Allow moonlight ports in firewall

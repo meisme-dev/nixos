@@ -4,29 +4,22 @@
   imports =
     [
       ./games.nix
-      ./resolve.nix
       ./obs.nix
+      ./qutebrowser/qutebrowser.nix
     ];
     
   home.packages = with pkgs; [
     blackbox-terminal
     blanket
-    dissent
+    discordo
     firefox
     floorp
     fragments
-    freetube
     gimp
     gnome-extension-manager
-    gnome.gnome-color-manager
-    gnome-text-editor
     gnome.gnome-tweaks
-    gnome.nautilus
-    godot_4
     gradience
     inkscape
-    kdePackages.kdenlive
-    kdePackages.neochat
     looking-glass-client
     mangohud
     moonlight-qt
@@ -34,6 +27,5 @@
     stremio
     sunshine
     thunderbird
-    wvkbd
   ];
 }
