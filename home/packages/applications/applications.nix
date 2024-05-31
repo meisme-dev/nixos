@@ -9,11 +9,13 @@
     ];
     
   home.packages = with pkgs; [
+    anki
     blackbox-terminal
     blanket
-    discordo
+    dissent
     firefox
     floorp
+    fractal
     fragments
     gimp
     gnome-extension-manager
@@ -24,6 +26,7 @@
     mangohud
     moonlight-qt
     pavucontrol
+    protonvpn-gui
     stremio
     sunshine
     thunderbird

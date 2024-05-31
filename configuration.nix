@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running `nixos-help`).
 
-{ lib, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 {
   imports =
@@ -19,6 +19,7 @@
     '';
   };
 
+  nixpkgs.config.allowUnfree = true;
 
   # Enable NTFS
   boot.supportedFilesystems = [ "ntfs" ];
@@ -88,14 +89,14 @@
 
   # Enable GPU drivers
   services.xserver.videoDrivers = [
-    "nouveau"
+    "nvidia"
     "amdgpu"
   ];
 
 
   # Enable early KMS
   boot.initrd.kernelModules = [
-    "nouveau"
+    "nvidia"
     "amdgpu"
   ];
 
@@ -120,19 +121,19 @@
   };
 
 
-  # hardware.nvidia = {
-  #   modesetting.enable = true;
-  #   powerManagement.enable = true;
-  #   powerManagement.finegrained = false;
-  #   open = false; # Disable until updated to build on >= 6.7
-  #   nvidiaSettings = true;
-  #   package = config.boot.kernelPackages.nvidiaPackages.stable;
-  #   prime = {
-  #     sync.enable = true;
-  #     nvidiaBusId = "PCI:01:00:0";
-  #     amdgpuBusId = "PCI:06:00:0";
-  #   };
-  # };
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = true;
+    powerManagement.finegrained = false;
+    open = true;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    prime = {
+      sync.enable = true;
+      nvidiaBusId = "PCI:01:00:0";
+      amdgpuBusId = "PCI:06:00:0";
+    };
+  };
 
  
   # Enable Gnome
@@ -224,9 +225,8 @@
   programs.nix-ld.enable = true;
 
 
-  # Enable Gamescope
-  # programs.gamescope.enable = true;
-
+  # Enable Sway 
+  programs.sway.enable = true;
 
   # Add system packages
   environment.systemPackages = with pkgs; [
@@ -255,7 +255,15 @@
 
 
   # Enable virtualization
-  vfio.enable = true;
+  vfio = {
+    enable = true;
+    vms = [ "win11" "bazzite" ];
+    devices = {
+      kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
+      ids = [ "10de:2560" "10de:228e" ];
+      pciIds = [ "0000:01:00.0" "0000:01:00.1" ];
+    };
+  };
 
 
   # Enable Waydroid

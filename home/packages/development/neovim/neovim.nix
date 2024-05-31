@@ -12,7 +12,11 @@
     vimAlias = true;
 
     globals.mapleader = " ";
-   
+
+    colorschemes.poimandres = {
+      enable = true;
+    };
+
     plugins = {
       alpha = {
         enable = true;
@@ -124,16 +128,6 @@
       autoSave.enabled = true;
     };
 
-    bufferline = {
-      enable = true;
-      offsets = [{
-        filetype = "NvimTree";
-        text = "File Manager";
-        separator = true;
-        text_align = "left";
-      }];
-    };
-
     clangd-extensions.enable = true;
 
     cmp = {
@@ -177,7 +171,11 @@
       enable = true;
       servers = {
         clangd.enable = true;
+        dartls.enable = true;
         nil_ls.enable = true;
+        lua-ls.enable = true;
+        kotlin-language-server.enable = true;
+        java-language-server.enable = true;
       };
     };
    
@@ -185,6 +183,7 @@
 
     lualine = {
       enable = true;
+      globalstatus = true;
       sectionSeparators.left = "";
       sectionSeparators.right = "";
     };
@@ -201,7 +200,6 @@
     nix.enable = true;
     noice.enable = true;
     notify.enable = true;
-    
     nvim-colorizer.enable = true;
     
     nvim-tree = {
@@ -217,7 +215,11 @@
     treesitter-context.enable = true;
     treesitter-refactor.enable = true;
     treesitter-textobjects.enable = true;
-    treesitter.enable = true;
+
+    treesitter = { 
+      enable = true;
+      disabledLanguages = [ "dart" ];
+    };
     which-key.enable = true;
   };
 
@@ -239,8 +241,13 @@
     }
     {
       action = "<cmd>Telescope live_grep<cr>";
-      key = "<leader>s";
+      key = "<leader>/";
       options.desc = "Search in current directory";
+    }
+    {
+      action = "<cmd>Telescope session-lens<cr>";
+      key = "<leader>s";
+      options.desc = "View past sessions";
     }
     {
       action = "<cmd>BufferLineCycleNext<cr>";
@@ -268,6 +275,12 @@
       options.desc = "Close current tab";
     }
     {
+      action = "<cmd>NvimTreeToggle<cr>";
+      key = "<leader>t";
+      options.desc = "Toggle the filesystem tree";
+    }
+
+    {
       action = "<nop>";
       key = "<space>";
       options = {
@@ -277,23 +290,23 @@
     }
   ];
     
-    options = {
+    opts = {
       number = true;
       relativenumber = true;
       shiftwidth = 2;
     };
 
-    extraPlugins = with pkgs; [
-      (vimUtils.buildVimPlugin {
-        name = "everforest";
-        src = fetchFromGitHub {
-          owner = "neanias";
-          repo = "everforest-nvim";
-          rev = "eedb19079c6bf9d162f74a5c48a6d2759f38cc76";
-          hash = "sha256-/k6VBzXuap8FTqMij7EQCh32TWaDPR9vAvEHw20fMCo=";
-        };
-      })
-    ];
+    #extraPlugins = with pkgs; [
+    #  (vimUtils.buildVimPlugin {
+    #    name = "everforest";
+    #    src = fetchFromGitHub {
+    #      owner = "neanias";
+    #      repo = "everforest-nvim";
+    #      rev = "eedb19079c6bf9d162f74a5c48a6d2759f38cc76";
+    #      hash = "sha256-/k6VBzXuap8FTqMij7EQCh32TWaDPR9vAvEHw20fMCo=";
+    #    };
+    #  })
+    #];
 
     extraConfigLua = builtins.readFile ./config.lua; 
   };

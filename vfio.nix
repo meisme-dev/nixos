@@ -1,25 +1,44 @@
-let
-  graphicsId = "10de:2560";
-  audioId = "10de:228e";
-  graphicsPci = "0000:01:00.0";
-  audioPci = "0000:01:00.1";
-  gpuIds = [
-    graphicsId
-    audioId
-  ];
-in
 { pkgs, lib, config, ... }: {
-  options.vfio.enable = with lib;
-    mkEnableOption "Configure the machine for VFIO";
+  options = with lib; {
+    vfio = {
+      enable = mkEnableOption "Configure the machine for VFIO";
+      vms = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        description = "The names of the VMs to configure";
+      };
+      devices.kernelModules = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        description = "The modules for the passed through devices";
+      };
+      devices.ids = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        description = "The IDs for the passed through devices";
+      };
+      devices.pciIds = mkOption {
+        type = types.listOf types.str;
+        default = [];
+        description = "The PCI IDs for the passed through devices";
+      };
+    };
+  };
 
   config =
-    let cfg = config.vfio;
-    in {
-      services.udev.extraRules = ''
-      TAG=="seat", ENV{ID_FOR_SEAT}=="drm-pci-${builtins.replaceStrings ["." ":"] ["_" "_"] graphicsPci}", ENV{ID_SEAT}="seat1", TAG-="master-of-seat"
-      SUBSYSTEM=="kvmfr", GROUP="kvm", MODE="0666"
-      '';
-      
+    let 
+      cfg = config.vfio;
+    in lib.mkIf cfg.enable {
+      services.udev = builtins.listToAttrs(
+        map(id: {
+          name = "extraRules";
+          value = ''
+            TAG=="seat", ENV{ID_FOR_SEAT}=="drm-pci-${builtins.replaceStrings ["." ":"] ["_" "_"] id}", ENV{ID_SEAT}="seat1", TAG-="master-of-seat"
+            SUBSYSTEM=="kvmfr", GROUP="kvm", MODE="0666"
+          '';
+        })
+      cfg.devices.pciIds);
+
       boot = {
         extraModulePackages = with config.boot.kernelPackages; [
           kvmfr
@@ -28,9 +47,8 @@ in
         initrd.kernelModules = [
           "vfio_pci"
           "vfio"
-          "nouveau"
           "kvmfr"
-        ];
+        ] ++ cfg.devices.kernelModules;
 
         kernelParams = [
           "amd_iommu=on"
@@ -40,8 +58,8 @@ in
           "kvm.ignore_msrs=1"
           "pci=realloc"
           "clock=tsc"
-        ] ++ lib.optional cfg.enable
-          ("vfio-pci.ids=" + lib.concatStringsSep "," gpuIds);
+          ''vfio-pci.ids=${"vfio-pci.ids=" + lib.concatStringsSep "," cfg.devices.ids}''
+        ];
       };
 
       virtualisation.spiceUSBRedirection.enable = true;
@@ -62,55 +80,98 @@ in
           "/dev/kvmfr0"
         ]
         '';
-        hooks.qemu.win11 = pkgs.writeShellScript "win11" ''
-          set -x
 
-          if [ "$1" != "win11" ]; then
-            exit
-          fi
+      hooks.qemu = builtins.listToAttrs(
+        map(
+          vm: {
+            name = vm; 
+            value = pkgs.writeShellScript vm 
+              (''
+              set -x
 
-          case $2 in
-          prepare)
-              modprobe -r nouveau 
+              if [ "$1" != "${vm}" ]; then
+                exit
+              fi
 
-              modprobe kvmfr static_size_mb=32
+              case $2 in
+                prepare)
+              '' 
+              +
+              (lib.concatLines (
+                map(
+                  kernelModule: "  modprobe -r ${kernelModule}"
+                ) (lib.reverseList cfg.devices.kernelModules)
+              ))
+              +
+              ''
 
-              echo "${builtins.replaceStrings [":"] [" "] graphicsId}" > /sys/bus/pci/drivers/vfio-pci/new_id
-              echo "${builtins.replaceStrings [":"] [" "] audioId}" > /sys/bus/pci/drivers/vfio-pci/new_id
+                modprobe kvmfr static_size_mb=32
+              ''
+              +
+              (lib.concatLines (
+                map(
+                  id: ''  echo "${builtins.replaceStrings [":"] [" "] id}" > /sys/bus/pci/drivers/vfio-pci/new_id''
+                ) cfg.devices.ids
+              ))
+              +
+              ''
 
-              echo 1 > /sys/bus/pci/rescan
-  
-              systemctl set-property --runtime -- user.slice AllowedCPUs=0,1
-              systemctl set-property --runtime -- system.slice AllowedCPUs=0,1
-              systemctl set-property --runtime -- init.scope AllowedCPUs=0,1
-              ;;
+                echo 1 > /sys/bus/pci/rescan
+      
+                systemctl set-property --runtime -- user.slice AllowedCPUs=0,1
+                systemctl set-property --runtime -- system.slice AllowedCPUs=0,1
+                systemctl set-property --runtime -- init.scope AllowedCPUs=0,1
+                ;;
 
-            release)    
-              virsh nodedev-detach pci_${builtins.replaceStrings ["." ":"] ["_" "_"] graphicsPci}
-              virsh nodedev-detach pci_${builtins.replaceStrings ["." ":"] ["_" "_"] audioPci}
-  
-              echo 1 > /sys/bus/pci/devices/${graphicsPci}/remove
-              echo 1 > /sys/bus/pci/devices/${audioPci}/remove
-  
-              echo "${builtins.replaceStrings [":"] [" "] graphicsId}" > /sys/bus/pci/drivers/vfio-pci/remove_id
-              echo "${builtins.replaceStrings [":"] [" "] audioId}" > /sys/bus/pci/drivers/vfio-pci/remove_id
+                release)
+              ''
+              +
+              (lib.concatLines (
+                map(
+                  pciId: 
+                    ''
+                      virsh nodedev-detach pci_${builtins.replaceStrings ["." ":"] ["_" "_"] pciId}
+                      echo 1 > /sys/bus/pci/devices/${pciId}/remove
+                    ''
+                ) cfg.devices.pciIds 
+              ))
+              +
+              (lib.concatLines (
+                map(
+                  id: ''  echo "${builtins.replaceStrings [":"] [" "] id}" > /sys/bus/pci/drivers/vfio-pci/remove_id''
+                ) cfg.devices.ids
+              ))
+              +
+              ''
 
-              echo 1 > /sys/bus/pci/rescan
+                echo 1 > /sys/bus/pci/rescan
+              ''
+              +
+              (lib.concatLines (
+                map(
+                  kernelModule: "  modprobe ${kernelModule}"
+                ) cfg.devices.kernelModules
+              ))
+              +
+              ''
 
-              modprobe nouveau 
+                nvidia-xconfig --query-gpu-info > /dev/null 2>&1
 
-              systemctl set-property --runtime -- user.slice AllowedCPUs=0-15
-              systemctl set-property --runtime -- system.slice AllowedCPUs=0-15
-              systemctl set-property --runtime -- init.scope AllowedCPUs=0-15
+                systemctl set-property --runtime -- user.slice AllowedCPUs=0-15
+                systemctl set-property --runtime -- system.slice AllowedCPUs=0-15
+                systemctl set-property --runtime -- init.scope AllowedCPUs=0-15
 
-              echo 0 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-              ;;
-            esac
-        '';
-      };
-      environment.sessionVariables = {
-        __EGL_VENDOR_LIBRARY_FILENAMES = "${pkgs.mesa_drivers}/share/glvnd/egl_vendor.d/50_mesa.json";
-      };
+                echo 0 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+                ;;
+              esac
+            '');
+          }
+        ) cfg.vms
+      );
     };
+    environment.sessionVariables = {
+      __EGL_VENDOR_LIBRARY_FILENAMES = "${pkgs.mesa_drivers}/share/glvnd/egl_vendor.d/50_mesa.json";
+    };
+  };
 }
 

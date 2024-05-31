@@ -1,14 +1,10 @@
 { pkgs, ... }:  
-
-{  
-  home.packages = with pkgs; [
-#    nodePackages."jsdom"
-#    nodePackages."qutejs"
-    (buildNpmPackage rec {
+let 
+    readability = (pkgs.buildNpmPackage rec {
       pname = "readability";
       version = "0.5.0";
 
-      src = fetchFromGitHub {
+      src = pkgs.fetchFromGitHub {
         owner = "mozilla";
         repo = pname;
         rev = "${version}";
@@ -17,13 +13,13 @@
 
       npmDepsHash = "sha256-1HvBWLt2/ckFZSVqzpYfXVzqqqXSEPCcRU+1+4w8XFU=";
       dontNpmBuild = true;
-    })
+    });
     
-    (buildNpmPackage rec {
+    qutejs = (pkgs.buildNpmPackage rec {
       pname = "qutejs";
       version = "f27e11e57c28c0ec3b8ec163c880595ddf1a8041";
 
-      src = fetchFromGitHub {
+      src = pkgs.fetchFromGitHub {
         owner = "aidanharris";
         repo = pname;
         rev = "${version}";
@@ -36,13 +32,13 @@
       postPatch = ''
         cp ${./qutejs-lock.json} package-lock.json
       '';
-    })
+    });
 
-    (buildNpmPackage rec {
+    jsdom = (pkgs.buildNpmPackage rec {
       pname = "jsdom";
       version = "24.0.0";
 
-      src = fetchFromGitHub {
+      src = pkgs.fetchFromGitHub {
         owner = "jsdom";
         repo = pname;
         rev = "${version}";
@@ -51,7 +47,13 @@
 
       npmDepsHash = "sha256-+Jc2w/HxcNLth1cqs12xnCfS7FwZ0ClWiDc6RDxLNAw=";
       dontNpmBuild = true;
-    })
+    });
+in {  
+  home.packages = with pkgs; [
+    readability
+    qutejs
+    jsdom
+    nodejs
   ];
 
   programs.qutebrowser = {
@@ -68,9 +70,25 @@
     ];
   };
 
-  xdg.dataFile."qutebrowser/userscripts/readability-js".text = 
-    builtins.readFile(builtins.fetchurl {
-      url = "https://raw.githubusercontent.com/qutebrowser/qutebrowser/12fcff9fe89277426ce910d17e579e20922a799b/misc/userscripts/readability-js";
-      sha256 = "08nv0jrsmx428nkiq44cffxc55b3shd6rm3y1cbc1xjn1kpppi6k";
-    });
+  xdg.dataFile."qutebrowser/userscripts/readability-js" = {
+    text = 
+      builtins.readFile(builtins.fetchurl {
+        url = "https://raw.githubusercontent.com/qutebrowser/qutebrowser/12fcff9fe89277426ce910d17e579e20922a799b/misc/userscripts/readability-js";
+        sha256 = "08nv0jrsmx428nkiq44cffxc55b3shd6rm3y1cbc1xjn1kpppi6k";
+      });
+    executable = true;
+  };
+
+  xdg.dataFile."qutebrowser/userscripts/view_in_mpv" = {
+    text = 
+      builtins.readFile(builtins.fetchurl {
+        url = "https://raw.githubusercontent.com/qutebrowser/qutebrowser/d4a7619f9c51db56016ab710ee007239d1733fc7/misc/userscripts/view_in_mpv";
+        sha256 = "0kda0jw8xchfnmhf5jhllxfdv7azq60p87v49bz4gwm70mgy4d19";
+      });
+    executable = true;
+  };
+
+  home.sessionVariables = {
+    NODE_PATH = "${jsdom}/lib/node_modules:${qutejs}/lib/node_modules:${readability}/lib/node_modules";
+  };
 } 
